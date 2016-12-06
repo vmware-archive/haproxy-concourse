@@ -1,0 +1,138 @@
+groups:
+- name: all
+  jobs:
+  - deploy
+  - validation-test
+- name: deploy
+  jobs:
+  - deploy
+- name: validation 
+  jobs:
+  - validation-test
+
+resources:
+- name: concourse-deploy-haproxy
+  type: git
+  check_every: 4h
+  source:
+    uri: https://github.com/c0-ops/haproxy-concourse
+    branch: master
+- name: omg-cli
+  type: github-release
+  check_every: 4h
+  source:
+    user: enaml-ops
+    repository: omg-cli
+- name: haproxy-bosh-release 
+  type: github-release
+  check_every: 4h
+  source:
+    user: cloudfoundry-community
+    repository: haproxy-boshrelease
+    access_token: {{github-token}}
+- name: haproxy-plugin
+  type: github-release
+  check_every: 4h
+  source:
+    user: enaml-ops
+    repository: haproxy-plugin
+    access_token: {{github-token}}
+- name: {{deployment-name}}
+  type: bosh-deployment
+  source:
+    #ca_cert: {{bosh-cacert}}
+    deployment: {{deployment-name}}
+    target: {{bosh-url}}
+    username: {{bosh-user}}
+    password: {{bosh-pass}}
+- name: stemcells
+  type: pivnet
+  source:
+    api_token: {{pivnet-api-token}}
+    product_slug: stemcells
+    product_version: {{stemcell-version}}
+
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+
+- name: deploy
+  plan:
+    - get: concourse-deploy-haproxy
+    - get: omg-cli
+      passed: [get-product-version]
+      params:
+        globs:
+        - omg-linux
+    - get: haproxy-plugin
+      passed: [get-product-version]
+      trigger: true
+      params:
+        globs:
+        - haproxy-plugin-linux
+    - get: stemcells
+      trigger: true
+      params:
+        globs:
+        - {{stemcell-cpi-glob}}
+    - get: haproxy-bosh-release
+      trigger: true
+      params:
+        globs:
+        - haproxy-{{haproxy-release-ver}}.tgz
+    - task: generate-manifest
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: virtmerlin/deploy-worker
+        run:
+          path: concourse-deploy-haproxy/ci/tasks/generate-pivotal-haproxy-service-manifest.sh
+        params:
+          BOSH_CLIENT: {{bosh-user}}
+          BOSH_CLIENT_SECRET: {{bosh-pass}}
+          BOSH_URL: {{bosh-url}}
+          BOSH_PORT: {{bosh-port}}
+          BOSH_CACERT: {{bosh-cacert}}
+          DEPLOYMENT_NAME: {{deployment-name}}
+          PRODUCT_PLUGIN: {{product_plugin}}
+          STEMCELL_VERSION: {{stemcell-version}}
+          OUTPUT_DIR: manifest
+          OMG_AZ: {{az-list}}
+          OMG_NETWORK_NAME: {{network-name}}
+
+        inputs:
+        - name: concourse-deploy-haproxy
+        - name: omg-cli
+        - name: haproxy-plugin
+        outputs:
+        - name: manifest
+          path: ""
+    - put: {{deployment-name}}
+      params:
+        manifest: manifest/deployment.yml
+        stemcells:
+        - stemcells/bosh-stemcell*.tgz
+        releases:
+        - haproxy-bosh-release/*.tgz
+- name: validation-test 
+  plan:
+    - get: concourse-deploy-haproxy
+    - task: has-multi-az-redundancy-map
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: virtmerlin/deploy-worker
+        run:
+          path: concourse-deploy-haproxy/ci/tasks/is-haproxy-proxying.sh
+        params:
+          PIVNET_TOKEN: {{pivnet-api-token}}
+          LOCATOR_CONNECTION: {{locator-connection-test}}
+        inputs:
+        - name: concourse-deploy-haproxy
