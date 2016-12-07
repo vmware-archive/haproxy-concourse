@@ -23,7 +23,7 @@ fi
 
 echo "breaking up cert blob into individual files..."
 echo "$HAPROXY_CERTS_BLOB" > ${CERTFILE}
-csplit -f ${CERTS_PREFIX} ${CERTFILE} '/^-----BEGIN RSA PRIVATE KEY-----/' '{*}' \
+csplit -f ${CERTS_PREFIX} ${CERTFILE} '/^-----BEGIN CERTIFICATE-----/' '{*}' \
   && rm -f ${CERTFILE} \
   && rm -f ${CERTS_PREFIX}00 \
   && export OMG_CERT_FILEPATH=$(ls -m ${CERTS_PREFIX}* | sed 's/ //g')
