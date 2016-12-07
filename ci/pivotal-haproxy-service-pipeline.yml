@@ -24,12 +24,10 @@ resources:
     user: enaml-ops
     repository: omg-cli
 - name: haproxy-bosh-release 
-  type: github-release
+  type: bosh-io-release
   check_every: 4h
   source:
-    user: cloudfoundry-community
-    repository: haproxy-boshrelease
-    access_token: {{github-token}}
+    repository: cloudfoundry-community/haproxy-boshrelease
 - name: haproxy-plugin
   type: github-release
   check_every: 4h
@@ -78,10 +76,6 @@ jobs:
         globs:
         - {{stemcell-cpi-glob}}
     - get: haproxy-bosh-release
-      trigger: true
-      params:
-        globs:
-        - haproxy-{{haproxy-release-ver}}.tgz
     - task: generate-manifest
       config:
         platform: linux
@@ -113,6 +107,7 @@ jobs:
         - name: concourse-deploy-haproxy
         - name: omg-cli
         - name: haproxy-plugin
+        - name: haproxy-bosh-release
         outputs:
         - name: manifest
           path: ""
