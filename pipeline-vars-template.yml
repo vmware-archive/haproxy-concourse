@@ -50,6 +50,7 @@ az-list: az1,az2,az3
 network-name: subnet1
 haproxy-release-ver: 8.0.9
 gorouter-ips: 1.1.1.1,1.1.1.2,1.1.1.3
+vm-type: large
 haproxy-ip: 1.1.1.4
 #syslog-url: 4.4.4.4:888
 internal-only-domains: abc.com,one.com,two.com
