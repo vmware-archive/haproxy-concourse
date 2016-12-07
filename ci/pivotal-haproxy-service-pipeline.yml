@@ -103,6 +103,11 @@ jobs:
           OUTPUT_DIR: manifest
           OMG_AZ: {{az-list}}
           OMG_NETWORK_NAME: {{network-name}}
+          OMG_GOROUTER_IP: {{gorouter-ips}}
+          OMG_HAPROXY_IP: {{haproxy-ip}}
+          OMG_INTERNAL_ONLY_DOMAIN: {{internal-only-domains}}
+          OMG_TRUSTED_DOMAIN_CIDR: {{trusted-domain-cidrs}} 
+          HAPROXY_CERTS_BLOB: {{haproxy-certs-blob}}
 
         inputs:
         - name: concourse-deploy-haproxy
