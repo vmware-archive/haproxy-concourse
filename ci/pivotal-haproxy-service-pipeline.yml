@@ -2,13 +2,13 @@ groups:
 - name: all
   jobs:
   - deploy
-  - validation-test
+  - validation
 - name: deploy
   jobs:
   - deploy
-- name: validation 
+- name: validate 
   jobs:
-  - validation-test
+  - validation
 
 resources:
 - name: concourse-deploy-haproxy
@@ -59,16 +59,15 @@ resource_types:
     repository: pivotalcf/pivnet-resource
     tag: latest-final
 
+jobs:
 - name: deploy
   plan:
     - get: concourse-deploy-haproxy
     - get: omg-cli
-      passed: [get-product-version]
       params:
         globs:
         - omg-linux
     - get: haproxy-plugin
-      passed: [get-product-version]
       trigger: true
       params:
         globs:
@@ -119,9 +118,11 @@ resource_types:
         - stemcells/bosh-stemcell*.tgz
         releases:
         - haproxy-bosh-release/*.tgz
-- name: validation-test 
+- name: validation 
   plan:
     - get: concourse-deploy-haproxy
+      trigger: true
+      passed: [deploy]
     - task: has-multi-az-redundancy-map
       config:
         platform: linux
@@ -133,6 +134,5 @@ resource_types:
           path: concourse-deploy-haproxy/ci/tasks/is-haproxy-proxying.sh
         params:
           PIVNET_TOKEN: {{pivnet-api-token}}
-          LOCATOR_CONNECTION: {{locator-connection-test}}
         inputs:
         - name: concourse-deploy-haproxy
