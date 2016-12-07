@@ -40,11 +40,11 @@ resources:
 - name: {{deployment-name}}
   type: bosh-deployment
   source:
-    #ca_cert: {{bosh-cacert}}
+    ca_cert: {{bosh-cacert}}
     deployment: {{deployment-name}}
     target: {{bosh-url}}
-    username: {{bosh-user}}
-    password: {{bosh-pass}}
+    client_id: {{bosh-user}}
+    client_secret: {{bosh-pass}}
 - name: stemcells
   type: pivnet
   source:
@@ -120,7 +120,7 @@ jobs:
       params:
         manifest: manifest/deployment.yml
         stemcells:
-        - stemcells/bosh-stemcell*.tgz
+        - stemcells/*bosh-stemcell*.tgz
         releases:
         - haproxy-bosh-release/*.tgz
 - name: validation 
