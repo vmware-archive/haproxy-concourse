@@ -1,5 +1,17 @@
 #!/bin/bash
 
+function cleanfail {
+  echo "FAILURE!!!"
+  echo $1
+  clean
+  exit 1
+} 
+
+function clean {
+  rm -f ${CERTFILE}
+  rm -f ${CERTS_PREFIX}* 
+}
+
 CERTFILE=certblob.cert
 CERTS_PREFIX=haproxy-cert-
 
@@ -11,9 +23,10 @@ fi
 
 echo "breaking up cert blob into individual files..."
 echo "$HAPROXY_CERTS_BLOB" > ${CERTFILE}
-csplit -f ${CERTS_PREFIX} ${CERTFILE} '/^-----BEGIN CERTIFICATE-----/' '{1}' \
-  && export OMG_CERT_FILEPATH=$(ls -mx ${CERTS_PREFIX}* | sed 's/ //g') \
-  && rm -f ${CERTFILE}
+csplit -f ${CERTS_PREFIX} ${CERTFILE} '/^-----BEGIN CERTIFICATE-----/' '{*}' \
+  && rm -f ${CERTFILE} \
+  && rm -f ${CERTS_PREFIX}00 \
+  && export OMG_CERT_FILEPATH=$(ls -m ${CERTS_PREFIX}* | sed 's/ //g')
 
 if [[ $? -ne 0 ]]; then 
   cleanfail "couldnt create your certs from blob"
@@ -47,16 +60,4 @@ fi
 echo "completed successfully"
 clean
 exit 0
-
-function cleanfail {
-  echo "FAILURE!!!"
-  echo $1
-  clean
-  exit 1
-} 
-
-function clean {
-  rm -f ${CERTFILE}
-  rm -f ${CERTS_PREFIX}* 
-}
 #eof
