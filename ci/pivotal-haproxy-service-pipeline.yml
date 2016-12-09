@@ -135,5 +135,8 @@ jobs:
           path: concourse-deploy-haproxy/ci/tasks/validate-haproxy-deployment.sh
         params:
           OMG_HAPROXY_IP: {{haproxy-ip}}
+          OMG_INTERNAL_ONLY_DOMAIN: {{internal-only-domains}}
+          OMG_TEST_INTERNAL_DOMAIN: google.io
+          OMG_TEST_PUBLIC_DOMAIN: google.com
         inputs:
         - name: concourse-deploy-haproxy
