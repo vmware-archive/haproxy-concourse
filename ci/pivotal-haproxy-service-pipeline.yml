@@ -132,8 +132,8 @@ jobs:
           source:
             repository: virtmerlin/deploy-worker
         run:
-          path: concourse-deploy-haproxy/ci/tasks/is-haproxy-proxying.sh
+          path: concourse-deploy-haproxy/ci/tasks/validate-haproxy-deployment.sh
         params:
-          PIVNET_TOKEN: {{pivnet-api-token}}
+          OMG_HAPROXY_IP: {{haproxy-ip}}
         inputs:
         - name: concourse-deploy-haproxy
